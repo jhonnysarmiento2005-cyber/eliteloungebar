@@ -11,25 +11,16 @@
         body { font-family: 'DM Sans', sans-serif; background: var(--negro); color: var(--blanco); margin: 0; padding-bottom: 100px; }
         .header { text-align: center; padding: 2rem; background: linear-gradient(to bottom, #001f3f, var(--negro)); border-bottom: 1px solid var(--borde); }
         .bar-name { font-family: 'Syne', sans-serif; font-size: 1.8rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
-        
-        /* Contenedores */
         .container { padding: 1.5rem; max-width: 600px; margin: 0 auto; }
         input { width: 100%; padding: 1rem; background: var(--negro-l); border: 1px solid var(--borde); border-radius: 12px; color: white; margin-bottom: 0.8rem; box-sizing: border-box; outline: none; }
         .btn-main { width: 100%; padding: 1rem; background: var(--accent); border: none; border-radius: 12px; color: white; font-weight: 800; cursor: pointer; transition: 0.3s; }
-        .btn-main:active { transform: scale(0.98); }
-
-        /* Tarjetas de Canciones */
         .song-card { display: flex; align-items: center; gap: 1rem; padding: 0.8rem; background: var(--negro-l); margin-bottom: 0.8rem; border-radius: 12px; border: 1px solid var(--borde); }
         .song-card img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
         .song-info { flex: 1; min-width: 0; }
         .song-info strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem; }
         .add-btn { background: var(--accent); border: none; color: white; padding: 0.6rem; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
-
-        /* Reproductor y Recomendaciones */
         #player-container { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
         .section-title { font-family: 'Syne', sans-serif; color: var(--accent); margin: 1.5rem 0 0.8rem; font-size: 1.1rem; text-transform: uppercase; }
-
-        /* Navegación */
         .nav { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); display: flex; border-top: 1px solid var(--borde); backdrop-filter: blur(10px); z-index: 100; }
         .nav-btn { flex: 1; padding: 1.2rem; border: none; background: none; color: #555; font-weight: bold; cursor: pointer; }
         .nav-btn.active { color: var(--accent); border-top: 2px solid var(--accent); }
@@ -60,10 +51,8 @@
     <div class="header"><h1 class="bar-name">DJ Control</h1></div>
     <div class="container">
         <div id="player-container"><div id="player"></div></div>
-        
         <div class="section-title">En espera</div>
         <div id="adminQueue"></div>
-
         <div class="section-title">Sugerencias (Relacionadas)</div>
         <div id="recommendations"></div>
     </div>
@@ -76,10 +65,9 @@
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-    // TUS CREDENCIALES
     const SB_URL = 'https://xptwljdevxnuwssmheol.supabase.co';
     const SB_KEY = 'sb_publishable_gExiKl7sio1u8S-knBN95Q_k4UUIxxM';
-    const YT_KEY = 'AIzaSyALwvELGjhSvocWqxE01Ga9JiykctZPtyw'; //
+    const YT_KEY = 'AIzaSyALwvELGjhSvocWqxE01Ga9JiykctZPtyw';
     
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
     let player, queue = [], isDj = false, currentVideoId = '';
@@ -91,7 +79,6 @@
         });
     }
 
-    // CLIENTE: Buscar y Pedir
     async function searchYouTube() {
         const q = document.getElementById('searchInput').value;
         if(!q) return;
@@ -112,54 +99,49 @@
         if(!error) alert("¡Enviado!");
     }
 
-    // DJ: Gestión de lista y sugerencias
     async function fetchQueue() {
         const { data } = await supabaseClient.from('canciones').select('*').order('created_at', { ascending: true });
         queue = data || [];
         renderQueue();
-        if(!currentVideoId && queue.length > 0) nextSong();
     }
 
     function renderQueue() {
         document.getElementById('adminQueue').innerHTML = queue.length ? queue.map((s, i) => `
-            <div class="song-card" style="opacity: ${i === 0 ? 1 : 0.6}">
+            <div class="song-card">
                 <div class="song-info"><strong>${s.titulo}</strong><small>Por: ${s.usuario}</small></div>
-                ${i === 0 ? '<button class="add-btn" onclick="nextSong()">PLAY</button>' : ''}
+                <button class="add-btn" onclick="playThis('${s.video_id}', '${s.id}')">PLAY</button>
             </div>
         `).join('') : '<p>Esperando pedidos...</p>';
     }
 
+    async function playThis(videoId, dbId) {
+        currentVideoId = videoId;
+        player.loadVideoById(videoId);
+        await supabaseClient.from('canciones').delete().eq('id', dbId);
+        fetchQueue();
+        getRecommendations(videoId);
+    }
+
     async function nextSong() {
         if(queue.length > 0) {
-            const song = queue[0];
-            currentVideoId = song.video_id;
-            player.loadVideoById(currentVideoId);
-            // Borrar de la DB porque ya se va a tocar
-            await supabaseClient.from('canciones').delete().eq('id', song.id);
-            fetchQueue();
-            getRecommendations(currentVideoId);
+            playThis(queue[0].video_id, queue[0].id);
         }
     }
 
     async function getRecommendations(videoId) {
-        // Busca videos relacionados al que suena
         const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&relatedToVideoId=${videoId}&maxResults=5&key=${YT_KEY}`);
         const data = await res.json();
         document.getElementById('recommendations').innerHTML = data.items.map(i => `
             <div class="song-card" style="background: #111">
                 <img src="${i.snippet.thumbnails.default.url}">
                 <div class="song-info"><strong>${i.snippet.title}</strong></div>
-                <button class="add-btn" style="background:#444" onclick="addToQueueDirect('${i.id.videoId}', '${i.snippet.title.replace(/'/g,"")}')">+</button>
+                <button class="add-btn" style="background:#444" onclick="sendToSupabase('${i.id.videoId}', '${i.snippet.title.replace(/'/g,"")}')">+</button>
             </div>
         `).join('');
     }
 
-    function addToQueueDirect(id, title) {
-        sendToSupabase(id, title);
-    }
-
-    // Suscripción en tiempo real
-    supabaseClient.channel('custom-insert-channel')
+    // Escuchar cambios en tiempo real
+    supabaseClient.channel('realtime:canciones')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'canciones' }, () => {
         if(isDj) fetchQueue();
     }).subscribe();
@@ -168,7 +150,7 @@
         if(document.getElementById('djUser').value === 'admin' && document.getElementById('djPass').value === 'elite2026') {
             isDj = true;
             showView('admin-panel');
-            fetchQueue();
+            fetchQueue(); // CARGA INICIAL DE DATOS
         } else { alert("Error"); }
     }
 
