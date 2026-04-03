@@ -3,198 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Lounge | Jukebox</title>
+    <title>Elite Lounge | Jukebox Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --accent: #007BFF; 
-            --negro: #0A0A0A;  
-            --negro-l: #1A1A1A;
-            --blanco: #F5F5F5;
-            --borde: rgba(255,255,255,0.1);
-        }
-        body { font-family: 'DM Sans', sans-serif; background: var(--negro); color: var(--blanco); margin: 0; padding-bottom: 100px; overflow-x: hidden; }
+        :root { --accent: #007BFF; --negro: #0A0A0A; --negro-l: #1A1A1A; --blanco: #F5F5F5; --borde: rgba(255,255,255,0.1); }
+        body { font-family: 'DM Sans', sans-serif; background: var(--negro); color: var(--blanco); margin: 0; padding-bottom: 100px; }
+        .header { text-align: center; padding: 2rem; background: linear-gradient(to bottom, #001f3f, var(--negro)); border-bottom: 1px solid var(--borde); }
+        .bar-name { font-family: 'Syne', sans-serif; font-size: 1.8rem; color: var(--accent); text-transform: uppercase; }
         
-        /* Header Estilo Lounge */
-        .header { text-align: center; padding: 2.5rem 1rem; background: linear-gradient(to bottom, #001f3f, var(--negro)); border-bottom: 1px solid var(--borde); }
-        .bar-name { font-family: 'Syne', sans-serif; font-size: 2rem; letter-spacing: 3px; color: var(--accent); text-transform: uppercase; margin: 0; }
-        .subtitle { font-size: 0.8rem; opacity: 0.6; letter-spacing: 2px; }
-
         /* Buscador */
         .search-container { padding: 1.5rem; max-width: 500px; margin: 0 auto; }
-        input { 
-            width: 100%; padding: 1rem; background: var(--negro-l); border: 1px solid var(--borde); 
-            border-radius: 12px; color: white; font-size: 1rem; margin-bottom: 0.8rem; box-sizing: border-box;
-            outline: none; transition: 0.3s;
-        }
-        input:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(0,123,255,0.2); }
-        
-        .btn-search { 
-            width: 100%; padding: 1rem; background: var(--accent); border: none; border-radius: 12px; 
-            color: white; font-family: 'Syne', sans-serif; font-weight: 800; cursor: pointer;
-            transition: 0.3s; text-transform: uppercase;
-        }
-        .btn-search:active { transform: scale(0.98); }
+        input { width: 100%; padding: 1rem; background: var(--negro-l); border: 1px solid var(--borde); border-radius: 12px; color: white; margin-bottom: 0.8rem; box-sizing: border-box; }
+        .btn-search { width: 100%; padding: 1rem; background: var(--accent); border: none; border-radius: 12px; color: white; font-weight: 800; cursor: pointer; }
 
-        /* Resultados y Lista */
-        .section-title { padding: 1rem 1.5rem 0.5rem; font-family: 'Syne', sans-serif; font-size: 1.2rem; color: var(--accent); }
-        .song-card {
-            display: flex; align-items: center; gap: 1rem; padding: 0.8rem;
-            background: var(--negro-l); margin: 0.5rem 1rem; border-radius: 12px; border: 1px solid var(--borde);
-            animation: fadeIn 0.5s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Login */
+        .login-box { padding: 2rem; text-align: center; }
         
-        .song-card img { width: 55px; height: 55px; border-radius: 8px; object-fit: cover; }
+        /* Resultados */
+        .song-card { display: flex; align-items: center; gap: 1rem; padding: 0.8rem; background: var(--negro-l); margin: 0.5rem 1rem; border-radius: 12px; border: 1px solid var(--borde); }
+        .song-card img { width: 50px; height: 50px; border-radius: 5px; }
         .song-info { flex: 1; min-width: 0; }
-        .song-info strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.95rem; }
-        .song-info small { color: #888; }
+        .song-info strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .add-btn { background: var(--accent); border: none; color: white; padding: 0.5rem; border-radius: 5px; cursor: pointer; }
+
+        /* Player */
+        #player-container { width: 100%; max-width: 600px; margin: 0 auto; aspect-ratio: 16/9; background: #000; }
         
-        .add-btn { background: var(--accent); border: none; color: white; padding: 0.6rem 1rem; border-radius: 8px; cursor: pointer; font-weight: bold; }
-
-        /* Reproductor (Oculto para clientes, visible para DJ) */
-        #player-wrapper { width: 100%; max-width: 500px; margin: 1rem auto; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden; display: none; }
-        #player-wrapper.active { display: block; }
-
-        /* Navegación Inferior */
-        .nav { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.98); display: flex; border-top: 1px solid var(--borde); backdrop-filter: blur(10px); z-index: 100; }
-        .nav-btn { flex: 1; padding: 1.2rem; border: none; background: none; color: #666; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
-        .nav-btn.active { color: var(--accent); border-top: 2px solid var(--accent); }
+        .nav { position: fixed; bottom: 0; width: 100%; background: #000; display: flex; border-top: 1px solid var(--borde); }
+        .nav-btn { flex: 1; padding: 1.2rem; border: none; background: none; color: #555; cursor: pointer; }
+        .nav-btn.active { color: var(--accent); }
     </style>
 </head>
 <body>
 
 <div id="view-client" class="view">
-    <div class="header">
-        <h1 class="bar-name">Elite Lounge</h1>
-        <div class="subtitle">CONTROL DE MÚSICA</div>
-    </div>
-    
+    <div class="header"><h1 class="bar-name">Elite Lounge</h1></div>
     <div class="search-container">
-        <input id="userName" type="text" placeholder="Tu nombre o mesa...">
-        <input id="searchInput" type="text" placeholder="Busca canción o artista...">
-        <button class="btn-search" onclick="searchYouTube()">BUSCAR EN YOUTUBE</button>
+        <input id="userName" type="text" placeholder="Tu nombre/mesa">
+        <input id="searchInput" type="text" placeholder="Buscar canción...">
+        <button class="btn-search" onclick="searchYouTube()">BUSCAR</button>
     </div>
-
     <div id="results"></div>
 </div>
 
-<div id="view-admin" class="view" style="display:none">
-    <div class="header">
-        <h1 class="bar-name">DJ Panel</h1>
-        <div class="subtitle">LISTA DE ESPERA</div>
+<div id="view-admin-login" class="view" style="display:none">
+    <div class="login-box">
+        <h2 class="bar-name">Acceso DJ</h2>
+        <input id="djUser" type="text" placeholder="Usuario">
+        <input id="djPass" type="password" placeholder="Contraseña">
+        <button class="btn-search" onclick="checkLogin()">ENTRAR</button>
     </div>
-    
-    <div id="player-wrapper">
-        <div id="player"></div>
-    </div>
+</div>
 
+<div id="view-admin-panel" class="view" style="display:none">
+    <div id="player-container"><div id="player"></div></div>
+    <div style="padding:1rem; text-align:center;">
+        <h3 id="nowPlayingTitle">Música de Ambiente</h3>
+        <button onclick="nextSong()" style="background:#444; border:none; color:white; padding:10px 20px; border-radius:20px;">Saltar Canción</button>
+    </div>
     <div id="adminQueue"></div>
 </div>
 
 <div class="nav">
-    <button id="btn-nav-client" class="nav-btn active" onclick="showView('client')">PEDIR CANCIÓN</button>
-    <button id="btn-nav-admin" class="nav-btn" onclick="showView('admin')">LISTA DJ</button>
+    <button id="nav-client" class="nav-btn active" onclick="showView('client')">CLIENTE</button>
+    <button id="nav-admin" class="nav-btn" onclick="showView('admin')">DJ</button>
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-    const API_KEY = 'AIzaSyALwvELGjhSvocWqxE01Ga9JiykctZPtyw'; 
+    const API_KEY = 'AIzaSyALwvELGjhSvocWqxE01Ga9JiykctZPtyw';
     let queue = [];
     let player;
+    let isDjLoggedIn = false;
+    
+    // Música que suena si nadie pide nada (IDs de YouTube)
+    const BACKGROUND_PLAYLIST = ['4NRXx6U8ABQ', '09R8_2nJtjg', 'L0X07zRpr7c']; 
+    let currentRadioIdx = 0;
 
-    // Inicializar Player de YouTube
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
-            height: '100%',
-            width: '100%',
-            playerVars: { 'autoplay': 1, 'controls': 1 },
-            events: { 'onStateChange': onPlayerStateChange }
+            height: '100%', width: '100%',
+            events: { 'onReady': startRadio, 'onStateChange': onPlayerStateChange }
         });
     }
 
-    function onPlayerStateChange(event) {
-        // Si la canción termina (0), podrías programar que suene la siguiente automáticamente
-        if (event.data === 0 && queue.length > 0) {
-            playNow(0);
+    function startRadio() {
+        if (queue.length === 0) {
+            player.loadVideoById(BACKGROUND_PLAYLIST[currentRadioIdx]);
         }
     }
 
-    // Buscador Real
+    function onPlayerStateChange(event) {
+        if (event.data === 0) { // La canción terminó
+            nextSong();
+        }
+    }
+
+    function nextSong() {
+        if (queue.length > 0) {
+            const next = queue.shift();
+            player.loadVideoById(next.id);
+            document.getElementById('nowPlayingTitle').innerText = next.title;
+            renderQueue();
+        } else {
+            currentRadioIdx = (currentRadioIdx + 1) % BACKGROUND_PLAYLIST.length;
+            player.loadVideoById(BACKGROUND_PLAYLIST[currentRadioIdx]);
+            document.getElementById('nowPlayingTitle').innerText = "Música de Ambiente";
+        }
+    }
+
     async function searchYouTube() {
         const query = document.getElementById('searchInput').value;
         if(!query) return;
-        
-        const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = "<p style='text-align:center; opacity:0.5;'>Buscando...</p>";
-        
-        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=6&q=${encodeURIComponent(query)}&type=video&key=${API_KEY}`;
-        
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            if (data.items.length === 0) {
-                resultsDiv.innerHTML = "<p style='text-align:center;'>No se encontraron resultados.</p>";
-                return;
-            }
-
-            resultsDiv.innerHTML = data.items.map(item => `
-                <div class="song-card">
-                    <img src="${item.snippet.thumbnails.default.url}">
-                    <div class="song-info">
-                        <strong>${item.snippet.title}</strong>
-                        <small>${item.snippet.channelTitle}</small>
-                    </div>
-                    <button class="add-btn" onclick="addToQueue('${item.id.videoId}', '${item.snippet.title.replace(/'/g, "")}')">PEDIR</button>
-                </div>
-            `).join('');
-        } catch (e) { 
-            resultsDiv.innerHTML = "<p style='text-align:center; color:red;'>Error de conexión con YouTube.</p>";
-        }
-    }
-
-    function addToQueue(id, title) {
-        const user = document.getElementById('userName').value || "Cliente";
-        queue.push({ id, title, user });
-        alert("¡Añadida! Avisa al DJ para que la ponga.");
-        renderAdmin();
-    }
-
-    function renderAdmin() {
-        const adminDiv = document.getElementById('adminQueue');
-        if(queue.length === 0) {
-            adminDiv.innerHTML = "<p style='text-align:center; margin-top:2rem; opacity:0.5;'>No hay canciones en espera.</p>";
-            return;
-        }
-        
-        adminDiv.innerHTML = "<div class='section-title'>PRÓXIMAS CANCIONES</div>" + queue.map((s, i) => `
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&type=video&key=${API_KEY}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        document.getElementById('results').innerHTML = data.items.map(item => `
             <div class="song-card">
-                <div class="song-info">
-                    <strong>${s.title}</strong>
-                    <small>Pedido por: ${s.user}</small>
-                </div>
-                <button class="add-btn" style="background:#28a745" onclick="playNow(${i})">PLAY</button>
+                <img src="${item.snippet.thumbnails.default.url}">
+                <div class="song-info"><strong>${item.snippet.title}</strong></div>
+                <button class="add-btn" onclick="addToQueue('${item.id.videoId}', '${item.snippet.title.replace(/'/g, "")}')">AÑADIR</button>
             </div>
         `).join('');
     }
 
-    function playNow(index) {
-        const song = queue[index];
-        document.getElementById('player-wrapper').classList.add('active');
-        player.loadVideoById(song.id);
-        queue.splice(index, 1);
-        renderAdmin();
+    function addToQueue(id, title) {
+        queue.push({ id, title });
+        alert("Añadida a la lista.");
+        if (isDjLoggedIn) renderQueue();
+    }
+
+    function renderQueue() {
+        document.getElementById('adminQueue').innerHTML = queue.map((s, i) => `
+            <div class="song-card" style="opacity:0.7">
+                <div class="song-info"><strong>${i+1}. ${s.title}</strong></div>
+            </div>
+        `).join('');
+    }
+
+    function checkLogin() {
+        // AQUÍ ELIGES TU USUARIO Y CONTRASEÑA
+        if(document.getElementById('djUser').value === 'admin' && document.getElementById('djPass').value === 'elite2026') {
+            isDjLoggedIn = true;
+            showView('admin-panel');
+        } else {
+            alert("Acceso denegado");
+        }
     }
 
     function showView(v) {
-        document.getElementById('view-client').style.display = v === 'client' ? 'block' : 'none';
-        document.getElementById('view-admin').style.display = v === 'admin' ? 'block' : 'none';
-        
-        document.getElementById('btn-nav-client').classList.toggle('active', v === 'client');
-        document.getElementById('btn-nav-admin').classList.toggle('active', v === 'admin');
-        
-        if(v === 'admin') renderAdmin();
+        document.querySelectorAll('.view').forEach(e => e.style.display = 'none');
+        document.getElementById('nav-client').classList.remove('active');
+        document.getElementById('nav-admin').classList.remove('active');
+
+        if(v === 'admin') {
+            document.getElementById(isDjLoggedIn ? 'view-admin-panel' : 'view-admin-login').style.display = 'block';
+            document.getElementById('nav-admin').classList.add('active');
+            if(isDjLoggedIn) renderQueue();
+        } else if (v === 'admin-panel') {
+            document.getElementById('view-admin-panel').style.display = 'block';
+            document.getElementById('nav-admin').classList.add('active');
+        } else {
+            document.getElementById('view-client').style.display = 'block';
+            document.getElementById('nav-client').classList.add('active');
+        }
     }
 </script>
 </body>
