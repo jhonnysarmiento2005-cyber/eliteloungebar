@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Elite Lounge – Jukebox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --gold:    #C9A84C;
+      --gold-l:  #E8C96A;
+      --gold-xl: rgba(201,168,76,0.12);
+      --negro:   #080808;
+      --negro-s: #111111;
+      --negro-m: #1A1A1A;
+      --negro-l: #242424;
+      --blanco:  #FAFAFA;
+      --gris:    #888888;
+      --gris-l:  #CCCCCC;
+      --verde:   #1DB954;
+      --rojo:    #E53935;
+      --borde:   rgba(255,255,255,0.07);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--negro); color: var(--blanco); overflow-x: hidden; min-height: 100vh; }
+
+    /* ── VISTAS ── */
+    .view { display: none; min-height: 100vh; }
+    .view.active { display: flex; flex-direction: column; }
+
+    /* ════════════════════════════
+       VISTA CLIENTE
+    ════════════════════════════ */
+    #view-client {
+      background: var(--negro);
+      background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.15) 0%, transparent 70%);
+    }
+
+    /* Header cliente */
+    .client-header {
+      padding: 2rem 1.5rem 1.5rem;
+      text-align: center;
+      border-bottom: 1px solid var(--borde);
+      position: relative;
+    }
+    .client-header::before {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 50%;
+      transform: translateX(-50%);
+      width: 60px; height: 2px;
+      background: var(--gold);
+    }
+    .bar-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--gold), var(--gold-l));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .bar-sub {
+      font-size: 0.72rem;
+      color: var(--gris);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 0.2rem;
+    }
+
+    /* Now playing */
+    .now-playing {
+      margin: 1.5rem;
+      background: var(--negro-m);
+      border: 1px solid var(--borde);
+      border-radius: 16px;
+      padding: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .now-playing::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(201,168,76,0.06) 0%, transparent 100%);
+    }
+    .np-thumb {
+      width: 54px; height: 54px;
+      border-radius: 10px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--negro-l);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+    }
+    .np-thumb img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; }
+    .np-info { flex: 1; min-width: 0; }
+    .np-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 0.2rem; }
+    .np-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--blanco); }
+    .np-artist { font-size: 0.78rem; color: var(--gris); margin-top: 0.1rem; }
+    .np-bars { display: flex; align-items: flex-end; gap: 2px; height: 18px; flex-shrink: 0; }
+    .np-bar { width: 3px; border-radius: 2px; background: var(--gold); animation: sound-bar 0.8s ease-in-out infinite alternate; }
+    .np-bar:nth-child(1){height:8px;animation-delay:0s}
+    .np-bar:nth-child(2){height:14px;animation-delay:0.15s}
+    .np-bar:nth-child(3){height:10px;animation-delay:0.3s}
+    .np-bar:nth-child(4){height:16px;animation-delay:0.1s}
+    .np-bar:nth-child(5){height:6px;animation-delay:0.25s}
+    @keyframes sound-bar { from{transform:scaleY(0.3)} to{transform:scaleY(1)} }
+
+    /* Tabs búsqueda / predefinidas */
+    .search-tabs {
+      display: flex;
+      margin: 0 1.5rem;
+      background: var(--negro-m);
+      border-radius: 12px;
+      padding: 4px;
+      gap: 4px;
+    }
+    .search-tab {
+      flex: 1; padding: 0.6rem; border-radius: 9px;
+      border: none; font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem; font-weight: 500; cursor: pointer;
+      transition: all 0.2s; background: transparent;
+      color: var(--gris); letter-spacing: 0.3px;
+    }
+    .search-tab.active { background: var(--negro-l); color: var(--blanco); }
+
+    /* Buscador */
+    .search-box {
+      margin: 1rem 1.5rem 0;
+      position: relative;
+    }
+    .search-input {
+      width: 100%; padding: 0.9rem 1rem 0.9rem 2.8rem;
+      background: var(--negro-m); border: 1px solid var(--borde);
+      border-radius: 12px; color: var(--blanco);
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--gold); }
+    .search-input::placeholder { color: var(--gris); }
+    .search-icon {
+      position: absolute; left: 0.9rem; top: 50%;
+      transform: translateY(-50%); color: var(--gris); font-size: 1rem; pointer-events: none;
+    }
+    .search-btn {
+      width: calc(100% - 3rem); margin: 0.6rem 1.5rem 0;
+      padding: 0.85rem; background: var(--gold);
+      color: var(--negro); font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 0.88rem; letter-spacing: 1px;
+      text-transform: uppercase; border: none; border-radius: 12px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .search-btn:hover { background: var(--gold-l); transform: translateY(-1px); }
+    .search-btn:active { transform: translateY(0); }
+
+    /* Resultados / Lista predefinida */
+    .songs-list {
+      flex: 1; overflow-y: auto;
+      padding: 0.8rem 1.5rem 6rem;
+      display: flex; flex-direction: column; gap: 0.6rem;
+    }
+    .songs-list::-webkit-scrollbar { width: 3px; }
+    .songs-list::-webkit-scrollbar-track { background: transparent; }
+    .songs-list::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
+
+    .song-item {
+      display: flex; align-items: center; gap: 0.9rem;
+      padding: 0.9rem; background: var(--negro-m);
+      border: 1px solid var(--borde); border-radius: 14px;
+      transition: all 0.2s; cursor: pointer;
+    }
+    .song-item:hover { border-color: var(--gold); background: var(--negro-l); }
+    .song-item:active { transform: scale(0.98); }
+    .song-thumb {
+      width: 46px; height: 46px; border-radius: 8px;
+      flex-shrink: 0; overflow: hidden; background: var(--negro-l);
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+    .song-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .song-info { flex: 1; min-width: 0; }
+    .song-title { font-weight: 500; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--blanco); }
+    .song-artist { font-size: 0.75rem; color: var(--gris); margin-top: 0.1rem; }
+    .song-duration { font-size: 0.72rem; color: var(--gris); flex-shrink: 0; }
+    .song-add-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--gold-xl); border: 1px solid rgba(201,168,76,0.3);
+      color: var(--gold); font-size: 1.1rem; display: flex;
+      align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+      font-weight: 300;
+    }
+    .song-add-btn:hover { background: var(--gold); color: var(--negro); }
+    .song-add-btn.added { background: var(--verde); border-color: var(--verde); color: var(--blanco); font-size: 0.8rem; }
+
+    /* Cola de espera del cliente */
+    .queue-section {
+      padding: 0 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .queue-label {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 2.5px;
+      text-transform: uppercase; color: var(--gold);
+      margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .queue-count {
+      background: var(--gold); color: var(--negro);
+      font-size: 0.65rem; font-weight: 800;
+      width: 18px; height: 18px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .queue-items { display: flex; flex-direction: column; gap: 0.5rem; }
+    .queue-item {
+      display: flex; align-items: center; gap: 0.8rem;
+      padding: 0.7rem 0.9rem;
+      background: rgba(201,168,76,0.06);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 10px;
+    }
+    .queue-pos {
+      font-family: 'Syne', sans-serif; font-size: 0.75rem;
+      font-weight: 800; color: var(--gold);
+      width: 20px; text-align: center; flex-shrink: 0;
+    }
+    .queue-item-title { flex: 1; font-size: 0.82rem; color: var(--blanco); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .queue-item-artist { font-size: 0.72rem; color: var(--gris); }
+    .queue-status {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 1px;
+      padding: 0.15rem 0.5rem; border-radius: 20px; flex-shrink: 0;
+    }
+    .status-pending { background: rgba(201,168,76,0.15); color: var(--gold); }
+    .status-approved { background: rgba(29,185,84,0.15); color: var(--verde); }
+
+    /* Nombre del usuario */
+    .user-name-bar {
+      margin: 0.8rem 1.5rem 0;
+      display: flex; gap: 0.6rem; align-items: center;
+    }
+    .user-name-input {
+      flex: 1; padding: 0.7rem 1rem;
+      background: var(--negro-m); border: 1px solid var(--borde);
+      border-radius: 10px; color: var(--blanco);
+      font-family: 'DM Sans', sans-serif; font-size: 0.85rem; outline: none;
+      transition: border-color 0.2s;
+    }
+    .user-name-input:focus { border-color: var(--gold); }
+    .user-name-input::placeholder { color: var(--gris); }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 5rem; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--gold); color: var(--negro);
+      padding: 0.7rem 1.5rem; border-radius: 30px;
+      font-weight: 700; font-size: 0.85rem; z-index: 999;
+      opacity: 0; transition: all 0.3s; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 3rem 1rem;
+      color: var(--gris); font-size: 0.85rem; line-height: 1.6;
+    }
+    .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 0.8rem; opacity: 0.5; }
+
+    /* Section loading */
+    .loading { text-align: center; padding: 2rem; color: var(--gris); font-size: 0.85rem; }
+
+    /* ════════════════════════════
+       VISTA ADMIN / DJ
+    ════════════════════════════ */
+    #view-admin {
+      background: var(--negro-s);
+      min-height: 100vh;
+    }
+    .admin-header {
+      background: var(--negro-m);
+      border-bottom: 1px solid var(--borde);
+      padding: 1.2rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .admin-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem; font-weight: 800; letter-spacing: 3px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--gold), var(--gold-l));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .admin-subtitle { font-size: 0.72rem; color: var(--gris); margin-top: 0.1rem; }
+    .admin-badge {
+      background: var(--gold-xl); border: 1px solid rgba(201,168,76,0.3);
+      color: var(--gold); font-size: 0.72rem; font-weight: 700;
+      padding: 0.3rem 0.8rem; border-radius: 20px;
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+    .admin-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+    /* Now Playing Admin */
+    .admin-np {
+      background: var(--negro-m); border: 1px solid rgba(201,168,76,0.3);
+      border-radius: 16px; padding: 1.4rem;
+      position: relative; overflow: hidden;
+    }
+    .admin-np::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-l), transparent);
+    }
+    .admin-np-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 0.8rem; }
+    .admin-np-content { display: flex; align-items: center; gap: 1rem; }
+    .admin-np-thumb { width: 56px; height: 56px; border-radius: 10px; flex-shrink: 0; background: var(--negro-l); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; overflow: hidden; }
+    .admin-np-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .admin-np-info { flex: 1; }
+    .admin-np-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--blanco); }
+    .admin-np-artist { font-size: 0.8rem; color: var(--gris); margin-top: 0.2rem; }
+    .admin-np-who { font-size: 0.7rem; color: var(--gold); margin-top: 0.4rem; }
+    .btn-played {
+      padding: 0.5rem 1rem; background: var(--negro-l);
+      border: 1px solid var(--borde); border-radius: 8px;
+      color: var(--gris); font-size: 0.78rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+    }
+    .btn-played:hover { border-color: var(--verde); color: var(--verde); }
+
+    /* Cola admin */
+    .admin-queue-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.8rem;
+    }
+    .admin-queue-title {
+      font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; color: var(--blanco);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .queue-badge {
+      background: var(--gold); color: var(--negro);
+      font-size: 0.68rem; font-weight: 800;
+      width: 20px; height: 20px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .btn-clear-all {
+      font-size: 0.72rem; color: var(--gris); cursor: pointer;
+      background: none; border: none; font-family: 'DM Sans', sans-serif;
+      transition: color 0.2s;
+    }
+    .btn-clear-all:hover { color: var(--rojo); }
+
+    .admin-song-item {
+      display: flex; align-items: center; gap: 0.9rem;
+      padding: 1rem; background: var(--negro-m);
+      border: 1px solid var(--borde); border-radius: 14px;
+      transition: all 0.2s; margin-bottom: 0.6rem;
+    }
+    .admin-song-item.pending { border-left: 3px solid var(--gold); }
+    .admin-song-item.approved { border-left: 3px solid var(--verde); }
+    .admin-song-thumb { width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0; background: var(--negro-l); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; overflow: hidden; }
+    .admin-song-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .admin-song-info { flex: 1; min-width: 0; }
+    .admin-song-title { font-weight: 500; font-size: 0.88rem; color: var(--blanco); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .admin-song-artist { font-size: 0.75rem; color: var(--gris); }
+    .admin-song-who { font-size: 0.7rem; color: var(--gold); margin-top: 0.2rem; }
+    .admin-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+    .admin-btn {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--borde); background: var(--negro-l);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; font-size: 0.85rem;
+    }
+    .btn-approve:hover { border-color: var(--verde); background: rgba(29,185,84,0.1); }
+    .btn-reject:hover  { border-color: var(--rojo);  background: rgba(229,57,53,0.1); }
+    .btn-top:hover     { border-color: var(--gold);  background: var(--gold-xl); }
+    .approved-mark {
+      font-size: 0.7rem; color: var(--verde); font-weight: 700;
+      padding: 0.2rem 0.6rem; border-radius: 20px;
+      background: rgba(29,185,84,0.1); border: 1px solid rgba(29,185,84,0.2);
+    }
+
+    /* Stats admin */
+    .admin-stats {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 0.8rem;
+    }
+    .admin-stat {
+      background: var(--negro-m); border: 1px solid var(--borde);
+      border-radius: 12px; padding: 1rem; text-align: center;
+    }
+    .admin-stat strong {
+      display: block; font-family: 'Syne', sans-serif;
+      font-size: 1.6rem; font-weight: 800; color: var(--gold);
+      letter-spacing: -1px; line-height: 1;
+    }
+    .admin-stat span { font-size: 0.7rem; color: var(--gris); margin-top: 0.2rem; display: block; }
+
+    /* Selector de vista */
+    .view-switcher {
+      position: fixed; bottom: 1.2rem; left: 50%;
+      transform: translateX(-50%); z-index: 200;
+      background: var(--negro-m); border: 1px solid var(--borde);
+      border-radius: 30px; padding: 4px; display: flex; gap: 4px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    }
+    .switcher-btn {
+      padding: 0.55rem 1.2rem; border-radius: 25px;
+      border: none; font-family: 'Syne', sans-serif;
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+      background: transparent; color: var(--gris);
+    }
+    .switcher-btn.active { background: var(--gold); color: var(--negro); }
+
+    /* Password admin */
+    .admin-lock {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 60vh; gap: 1rem; padding: 2rem;
+    }
+    .admin-lock h2 { font-family: 'Syne', sans-serif; font-size: 1.2rem; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; }
+    .admin-lock p { font-size: 0.82rem; color: var(--gris); text-align: center; }
+    .lock-input {
+      width: 100%; max-width: 260px; padding: 0.9rem 1rem;
+      background: var(--negro-m); border: 1px solid var(--borde);
+      border-radius: 12px; color: var(--blanco);
+      font-family: 'DM Sans', sans-serif; font-size: 1rem;
+      text-align: center; letter-spacing: 4px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .lock-input:focus { border-color: var(--gold); }
+    .lock-btn {
+      padding: 0.85rem 2.5rem; background: var(--gold);
+      color: var(--negro); font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 0.85rem; letter-spacing: 2px;
+      text-transform: uppercase; border: none; border-radius: 12px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .lock-btn:hover { background: var(--gold-l); }
+    .lock-error { color: var(--rojo); font-size: 0.8rem; display: none; }
+    .lock-error.show { display: block; }
+
+    /* Admin panel hidden until unlocked */
+    #admin-content { display: none; }
+    #admin-content.unlocked { display: flex; flex-direction: column; gap: 1.5rem; }
+
+    /* Responsive */
+    @media(min-width: 600px) {
+      .client-header { padding: 2.5rem 2rem 2rem; }
+      .bar-name { font-size: 2rem; }
+      .songs-list, .search-box, .search-tabs, .user-name-bar { margin-left: 2rem; margin-right: 2rem; }
+      .search-btn { width: calc(100% - 4rem); margin-left: 2rem; margin-right: 2rem; }
+      .queue-section { padding-left: 2rem; padding-right: 2rem; }
+      .now-playing { margin-left: 2rem; margin-right: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════
+     VISTA CLIENTE
+══════════════════════════ -->
+<div class="view active" id="view-client">
+
+  <div class="client-header">
+    <div class="bar-name">Elite Lounge</div>
+    <div class="bar-sub">Jukebox · Pide tu canción</div>
+  </div>
+
+  <!-- Now Playing -->
+  <div class="now-playing" id="npClient">
+    <div class="np-thumb" id="npClientThumb">🎵</div>
+    <div class="np-info">
+      <div class="np-label">Sonando ahora</div>
+      <div class="np-title" id="npClientTitle">Esperando canción...</div>
+      <div class="np-artist" id="npClientArtist">—</div>
+    </div>
+    <div class="np-bars">
+      <div class="np-bar"></div><div class="np-bar"></div>
+      <div class="np-bar"></div><div class="np-bar"></div>
+      <div class="np-bar"></div>
+    </div>
+  </div>
+
+  <!-- Nombre del usuario -->
+  <div class="user-name-bar">
+    <input class="user-name-input" id="userName" type="text" placeholder="Tu nombre (opcional)" maxlength="24"/>
+  </div>
+
+  <!-- Tabs -->
+  <div class="search-tabs" style="margin-top:1rem">
+    <button class="search-tab active" onclick="switchTab('search',this)">🔍 Buscar canción</button>
+    <button class="search-tab" onclick="switchTab('preset',this)">⭐ Populares</button>
+    <button class="search-tab" onclick="switchTab('queue',this)">📋 En espera</button>
+  </div>
+
+  <!-- Panel BÚSQUEDA -->
+  <div id="panel-search">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" type="text" placeholder="Busca por nombre o artista..." maxlength="80"
+        onkeydown="if(event.key==='Enter') searchSongs()"/>
+    </div>
+    <button class="search-btn" onclick="searchSongs()">Buscar en YouTube</button>
+    <div class="songs-list" id="searchResults">
+      <div class="empty-state">
+        <div class="empty-icon">🎶</div>
+        <p>Escribe el nombre de una canción<br/>y toca Buscar</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel POPULARES -->
+  <div id="panel-preset" style="display:none">
+    <div class="songs-list" id="presetList"></div>
+  </div>
+
+  <!-- Panel COLA -->
+  <div id="panel-queue" style="display:none">
+    <div class="queue-section" style="padding-top:1rem">
+      <div class="queue-label">
+        En espera
+        <span class="queue-count" id="queueCountClient">0</span>
+      </div>
+      <div class="queue-items" id="clientQueueList">
+        <div class="empty-state">
+          <div class="empty-icon">⏳</div>
+          <p>La lista de espera está vacía.<br/>¡Sé el primero en pedir!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════
+     VISTA ADMIN
+══════════════════════════ -->
+<div class="view" id="view-admin">
+  <div class="admin-header">
+    <div>
+      <div class="admin-title">Elite Lounge</div>
+      <div class="admin-subtitle">Panel del DJ</div>
+    </div>
+    <div class="admin-badge">🎧 DJ Mode</div>
+  </div>
+
+  <!-- Lock screen -->
+  <div class="admin-lock" id="adminLock">
+    <div style="font-size:3rem">🔐</div>
+    <h2>Panel del DJ</h2>
+    <p>Ingresa la contraseña<br/>para acceder al panel</p>
+    <input class="lock-input" id="lockInput" type="password" placeholder="••••" maxlength="8"
+      onkeydown="if(event.key==='Enter') checkPassword()"/>
+    <button class="lock-btn" onclick="checkPassword()">Entrar</button>
+    <div class="lock-error" id="lockError">Contraseña incorrecta</div>
+  </div>
+
+  <!-- Admin content (unlocked) -->
+  <div class="admin-body" id="admin-content">
+
+    <!-- Stats -->
+    <div class="admin-stats">
+      <div class="admin-stat"><strong id="statTotal">0</strong><span>En cola</span></div>
+      <div class="admin-stat"><strong id="statApproved">0</strong><span>Aprobadas</span></div>
+      <div class="admin-stat"><strong id="statPlayed">0</strong><span>Reproducidas</span></div>
+    </div>
+
+    <!-- Now Playing Admin -->
+    <div class="admin-np">
+      <div class="admin-np-label">🎵 Sonando ahora</div>
+      <div class="admin-np-content">
+        <div class="admin-np-thumb" id="npAdminThumb">🎵</div>
+        <div class="admin-np-info">
+          <div class="admin-np-title" id="npAdminTitle">Sin canción activa</div>
+          <div class="admin-np-artist" id="npAdminArtist">—</div>
+          <div class="admin-np-who" id="npAdminWho"></div>
+        </div>
+        <button class="btn-played" onclick="markPlayed()">✓ Reproducida</button>
+      </div>
+    </div>
+
+    <!-- Cola Admin -->
+    <div>
+      <div class="admin-queue-header">
+        <div class="admin-queue-title">
+          Cola de espera
+          <span class="queue-badge" id="adminQueueBadge">0</span>
+        </div>
+        <button class="btn-clear-all" onclick="clearAll()">Limpiar todo</button>
+      </div>
+      <div id="adminQueueList">
+        <div class="empty-state">
+          <div class="empty-icon">🎵</div>
+          <p>No hay canciones en espera todavía</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SELECTOR DE VISTA -->
+<div class="view-switcher">
+  <button class="switcher-btn active" onclick="switchView('client',this)">🎵 Cliente</button>
+  <button class="switcher-btn" onclick="switchView('admin',this)">🎧 DJ</button>
+</div>
+
+<script>
+  // ── ESTADO ──
+  const ADMIN_PASS = '1234'; // contraseña del DJ
+  let queue = [];     // lista de espera
+  let nowPlaying = null;
+  let playedCount = 0;
+  let activeTab = 'search';
+  let adminUnlocked = false;
+
+  // Canciones predefinidas populares
+  const PRESET_SONGS = [
+    { id: 'p1', title: 'Blinding Lights', artist: 'The Weeknd', thumb: 'https://i.ytimg.com/vi/4NRXx6U8ABQ/mqdefault.jpg', duration: '3:20' },
+    { id: 'p2', title: 'Bad Guy', artist: 'Billie Eilish', thumb: 'https://i.ytimg.com/vi/DyDfgMOUjCI/mqdefault.jpg', duration: '3:14' },
+    { id: 'p3', title: 'Shape of You', artist: 'Ed Sheeran', thumb: 'https://i.ytimg.com/vi/JGwWNGJdvx8/mqdefault.jpg', duration: '3:53' },
+    { id: 'p4', title: 'Levitating', artist: 'Dua Lipa', thumb: 'https://i.ytimg.com/vi/TUVcZfQe-Kw/mqdefault.jpg', duration: '3:23' },
+    { id: 'p5', title: 'Peaches', artist: 'Justin Bieber', thumb: 'https://i.ytimg.com/vi/tQ0yjYUFKAE/mqdefault.jpg', duration: '3:18' },
+    { id: 'p6', title: 'Stay', artist: 'The Kid LAROI & Justin Bieber', thumb: 'https://i.ytimg.com/vi/kTJczUoc26U/mqdefault.jpg', duration: '2:21' },
+    { id: 'p7', title: 'Industry Baby', artist: 'Lil Nas X & Jack Harlow', thumb: 'https://i.ytimg.com/vi/UTHLKHL_whs/mqdefault.jpg', duration: '3:32' },
+    { id: 'p8', title: 'Montero', artist: 'Lil Nas X', thumb: 'https://i.ytimg.com/vi/6swmTBVI83k/mqdefault.jpg', duration: '2:17' },
+    { id: 'p9', title: 'Butter', artist: 'BTS', thumb: 'https://i.ytimg.com/vi/WMweEpGlu_U/mqdefault.jpg', duration: '2:42' },
+    { id: 'p10', title: 'Dynamite', artist: 'BTS', thumb: 'https://i.ytimg.com/vi/gdZLi9oWNZg/mqdefault.jpg', duration: '3:19' },
+    { id: 'p11', title: 'Heat Waves', artist: 'Glass Animals', thumb: 'https://i.ytimg.com/vi/mRD0-GxqHVo/mqdefault.jpg', duration: '3:59' },
+    { id: 'p12', title: 'As It Was', artist: 'Harry Styles', thumb: 'https://i.ytimg.com/vi/H5v3kku4y6Q/mqdefault.jpg', duration: '2:37' },
+    { id: 'p13', title: 'Unholy', artist: 'Sam Smith & Kim Petras', thumb: 'https://i.ytimg.com/vi/Uq9gPaIzbe8/mqdefault.jpg', duration: '2:36' },
+    { id: 'p14', title: 'Anti-Hero', artist: 'Taylor Swift', thumb: 'https://i.ytimg.com/vi/b1kbLwvqugk/mqdefault.jpg', duration: '3:20' },
+    { id: 'p15', title: 'Flowers', artist: 'Miley Cyrus', thumb: 'https://i.ytimg.com/vi/G7KNmW9a75Y/mqdefault.jpg', duration: '3:21' },
+    { id: 'p16', title: 'Ella Baila Sola', artist: 'Eslabon Armado & Peso Pluma', thumb: 'https://i.ytimg.com/vi/e9S1DFNjrR0/mqdefault.jpg', duration: '3:28' },
+    { id: 'p17', title: 'La Bebe', artist: 'Yng Lvcas & Peso Pluma', thumb: 'https://i.ytimg.com/vi/BbE18hRbZJg/mqdefault.jpg', duration: '3:09' },
+    { id: 'p18', title: 'Quevedo Bzrp', artist: 'Bizarrap & Quevedo', thumb: 'https://i.ytimg.com/vi/b4sVVMkdNh4/mqdefault.jpg', duration: '3:18' },
+  ];
+
+  // ── VIEWS ──
+  function switchView(v, btn) {
+    document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.switcher-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('view-' + v).classList.add('active');
+    btn.classList.add('active');
+    if (v === 'admin') renderAdmin();
+    if (v === 'client') renderClientQueue();
+  }
+
+  // ── TABS CLIENTE ──
+  function switchTab(tab, btn) {
+    activeTab = tab;
+    document.querySelectorAll('.search-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-search').style.display = tab === 'search' ? 'flex' : 'none';
+    document.getElementById('panel-search').style.flexDirection = 'column';
+    document.getElementById('panel-preset').style.display = tab === 'preset' ? 'block' : 'none';
+    document.getElementById('panel-queue').style.display  = tab === 'queue'  ? 'block' : 'none';
+    if (tab === 'preset') renderPreset();
+    if (tab === 'queue')  renderClientQueue();
+  }
+
+  // ── BÚSQUEDA YOUTUBE (simulada con resultados dinámicos) ──
+  function searchSongs() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (!q) { showToast('Escribe algo para buscar 🎵'); return; }
+    const results = document.getElementById('searchResults');
+    results.innerHTML = '<div class="loading">🔍 Buscando "' + q + '"...</div>';
+    setTimeout(() => {
+      // Simulamos resultados basados en la búsqueda
+      const fakeResults = generateFakeResults(q);
+      renderSongList(fakeResults, 'searchResults');
+    }, 900);
+  }
+
+  function generateFakeResults(q) {
+    const artists = ['DJ Khaled', 'Bad Bunny', 'J Balvin', 'Maluma', 'Ozuna', 'Karol G', 'Shakira', 'The Weeknd', 'Drake', 'Post Malone'];
+    const suffixes = ['ft. Various Artists', '(Official Video)', '(Remix)', '(Live)', '(Official Audio)'];
+    return Array.from({length: 5}, (_, i) => ({
+      id: 'r' + Date.now() + i,
+      title: q.charAt(0).toUpperCase() + q.slice(1) + ' ' + suffixes[i % suffixes.length],
+      artist: artists[Math.floor(Math.random() * artists.length)],
+      thumb: PRESET_SONGS[Math.floor(Math.random() * PRESET_SONGS.length)].thumb,
+      duration: `${2 + Math.floor(Math.random()*2)}:${String(Math.floor(Math.random()*60)).padStart(2,'0')}`
+    }));
+  }
+
+  function renderPreset() {
+    renderSongList(PRESET_SONGS, 'presetList');
+  }
+
+  function renderSongList(songs, containerId) {
+    const el = document.getElementById(containerId);
+    if (!songs.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">😕</div><p>No se encontraron resultados</p></div>'; return; }
+    el.innerHTML = songs.map(s => `
+      <div class="song-item" onclick="addSong('${s.id}','${esc(s.title)}','${esc(s.artist)}','${s.thumb}','${s.duration}')">
+        <div class="song-thumb">
+          <img src="${s.thumb}" alt="" onerror="this.parentElement.innerHTML='🎵'"/>
+        </div>
+        <div class="song-info">
+          <div class="song-title">${s.title}</div>
+          <div class="song-artist">${s.artist}</div>
+        </div>
+        <div class="song-duration">${s.duration}</div>
+        <div class="song-add-btn" id="addbtn-${s.id}">+</div>
+      </div>`).join('');
+  }
+
+  function esc(s) { return s.replace(/'/g,"&#39;").replace(/"/g,'&quot;'); }
+
+  // ── AGREGAR CANCIÓN ──
+  function addSong(id, title, artist, thumb, duration) {
+    const name = document.getElementById('userName').value.trim() || 'Anónimo';
+    const alreadyIn = queue.find(s => s.id === id + '-' + Date.now());
+    const btn = document.getElementById('addbtn-' + id);
+
+    const song = {
+      id: id + '-' + Date.now(),
+      title: decodeEntities(title),
+      artist: decodeEntities(artist),
+      thumb, duration,
+      who: name,
+      status: 'pending',
+      ts: Date.now()
+    };
+    queue.push(song);
+    saveState();
+    updateNowPlayingClient();
+
+    if (btn) { btn.textContent = '✓'; btn.classList.add('added'); setTimeout(() => { btn.textContent = '+'; btn.classList.remove('added'); }, 2000); }
+    showToast('🎵 "' + song.title.substring(0,24) + '..." agregada a la lista');
+    document.getElementById('queueCountClient').textContent = queue.length;
+  }
+
+  function decodeEntities(s) {
+    const txt = document.createElement('textarea');
+    txt.innerHTML = s; return txt.value;
+  }
+
+  // ── ESTADO PERSISTENTE ──
+  function saveState() {
+    try { localStorage.setItem('elite_queue', JSON.stringify(queue)); localStorage.setItem('elite_np', JSON.stringify(nowPlaying)); localStorage.setItem('elite_played', playedCount); } catch(e){}
+  }
+  function loadState() {
+    try {
+      const q = localStorage.getItem('elite_queue'); if (q) queue = JSON.parse(q);
+      const np = localStorage.getItem('elite_np'); if (np) nowPlaying = JSON.parse(np);
+      const pc = localStorage.getItem('elite_played'); if (pc) playedCount = parseInt(pc);
+    } catch(e){}
+  }
+
+  // ── NOW PLAYING ──
+  function updateNowPlayingClient() {
+    const np = nowPlaying;
+    const titleEl = document.getElementById('npClientTitle');
+    const artistEl = document.getElementById('npClientArtist');
+    const thumbEl = document.getElementById('npClientThumb');
+    if (np) {
+      titleEl.textContent = np.title;
+      artistEl.textContent = np.artist;
+      thumbEl.innerHTML = `<img src="${np.thumb}" onerror="this.parentElement.innerHTML='🎵'" alt=""/>`;
+    } else {
+      titleEl.textContent = 'Esperando canción...';
+      artistEl.textContent = '—';
+      thumbEl.innerHTML = '🎵';
+    }
+  }
+
+  // ── COLA CLIENTE ──
+  function renderClientQueue() {
+    const el = document.getElementById('clientQueueList');
+    const countEl = document.getElementById('queueCountClient');
+    countEl.textContent = queue.length;
+    if (!queue.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><p>La lista de espera está vacía.<br/>¡Sé el primero en pedir!</p></div>'; return; }
+    el.innerHTML = queue.map((s, i) => `
+      <div class="queue-item">
+        <div class="queue-pos">${i + 1}</div>
+        <div style="flex:1;min-width:0">
+          <div class="queue-item-title">${s.title}</div>
+          <div class="queue-item-artist">${s.artist} · ${s.who}</div>
+        </div>
+        <span class="queue-status ${s.status === 'approved' ? 'status-approved' : 'status-pending'}">
+          ${s.status === 'approved' ? '✓ Aprobada' : '⏳ Pendiente'}
+        </span>
+      </div>`).join('');
+  }
+
+  // ── ADMIN PASSWORD ──
+  function checkPassword() {
+    const val = document.getElementById('lockInput').value;
+    if (val === ADMIN_PASS) {
+      document.getElementById('adminLock').style.display = 'none';
+      document.getElementById('admin-content').classList.add('unlocked');
+      adminUnlocked = true;
+      renderAdmin();
+      // Auto-refresh cada 3s
+      setInterval(() => { if (adminUnlocked) renderAdmin(); }, 3000);
+    } else {
+      const err = document.getElementById('lockError');
+      err.classList.add('show');
+      setTimeout(() => err.classList.remove('show'), 2000);
+    }
+  }
+
+  // ── ADMIN RENDER ──
+  function renderAdmin() {
+    loadState();
+    const approved = queue.filter(s => s.status === 'approved').length;
+    document.getElementById('statTotal').textContent = queue.length;
+    document.getElementById('statApproved').textContent = approved;
+    document.getElementById('statPlayed').textContent = playedCount;
+    document.getElementById('adminQueueBadge').textContent = queue.length;
+
+    // Now playing
+    if (nowPlaying) {
+      document.getElementById('npAdminTitle').textContent = nowPlaying.title;
+      document.getElementById('npAdminArtist').textContent = nowPlaying.artist;
+      document.getElementById('npAdminWho').textContent = 'Pedida por: ' + nowPlaying.who;
+      document.getElementById('npAdminThumb').innerHTML = `<img src="${nowPlaying.thumb}" onerror="this.parentElement.innerHTML='🎵'" alt=""/>`;
+    } else {
+      document.getElementById('npAdminTitle').textContent = 'Sin canción activa';
+      document.getElementById('npAdminArtist').textContent = '—';
+      document.getElementById('npAdminWho').textContent = '';
+      document.getElementById('npAdminThumb').innerHTML = '🎵';
+    }
+
+    // Cola
+    const el = document.getElementById('adminQueueList');
+    if (!queue.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">🎵</div><p>No hay canciones en espera todavía</p></div>'; return; }
+    el.innerHTML = queue.map((s, i) => `
+      <div class="admin-song-item ${s.status}">
+        <div class="admin-song-thumb"><img src="${s.thumb}" onerror="this.parentElement.innerHTML='🎵'" alt=""/></div>
+        <div class="admin-song-info">
+          <div class="admin-song-title">${s.title}</div>
+          <div class="admin-song-artist">${s.artist}</div>
+          <div class="admin-song-who">Pedida por ${s.who}</div>
+        </div>
+        ${s.status === 'approved'
+          ? `<span class="approved-mark">✓ Aprobada</span>`
+          : `<div class="admin-actions">
+               <div class="admin-btn btn-top" onclick="moveToTop(${i})" title="Poner primero">⬆️</div>
+               <div class="admin-btn btn-approve" onclick="approveSong(${i})" title="Aprobar">✅</div>
+               <div class="admin-btn btn-reject" onclick="rejectSong(${i})" title="Eliminar">❌</div>
+             </div>`
+        }
+      </div>`).join('');
+  }
+
+  function approveSong(i) {
+    queue[i].status = 'approved';
+    if (!nowPlaying) { nowPlaying = queue[i]; queue.splice(i, 1); }
+    saveState(); renderAdmin(); updateNowPlayingClient();
+  }
+  function rejectSong(i) { queue.splice(i, 1); saveState(); renderAdmin(); }
+  function moveToTop(i) { const s = queue.splice(i, 1)[0]; queue.unshift(s); saveState(); renderAdmin(); }
+  function markPlayed() {
+    if (!nowPlaying) return;
+    nowPlaying = queue.length ? queue.shift() : null;
+    playedCount++;
+    saveState(); renderAdmin(); updateNowPlayingClient();
+    showToast('✓ Marcada como reproducida');
+  }
+  function clearAll() {
+    if (!confirm('¿Limpiar toda la cola?')) return;
+    queue = []; saveState(); renderAdmin();
+  }
+
+  // ── TOAST ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ── INIT ──
+  loadState();
+  renderPreset();
+  updateNowPlayingClient();
+  renderClientQueue();
+  document.getElementById('panel-search').style.display = 'flex';
+  document.getElementById('panel-search').style.flexDirection = 'column';
+  document.getElementById('panel-preset').style.display = 'none';
+  document.getElementById('panel-queue').style.display = 'none';
+</script>
+</body>
+</html>
